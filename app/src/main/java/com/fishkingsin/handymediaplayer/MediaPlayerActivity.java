@@ -2,6 +2,7 @@ package com.fishkingsin.handymediaplayer;
 
 import android.animation.TimeAnimator;
 import android.content.Intent;
+import android.graphics.SurfaceTexture;
 import android.media.MediaCodec;
 import android.media.MediaExtractor;
 import android.net.Uri;
@@ -39,27 +40,63 @@ public class MediaPlayerActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
         Intent intent = getIntent();
         curPath = intent.getStringExtra("GetPath");
         setContentView(R.layout.activity_media_player);
         mPlaybackView = (TextureView) findViewById(R.id.PlaybackView);
-
+        this.mPlaybackView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
+                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
         Button playpause = (Button) findViewById(R.id.play_pause_button);
-        playpause.setOnClickListener(new OnClickListener(){
-            public void onClick(View view){
-                startPlayback();
+        playpause.setOnClickListener(new OnClickListener() {
+            public void onClick(View view) {
+                if (mTimeAnimator.isRunning()) {
+                    mTimeAnimator.end();
+                } else {
+                    mTimeAnimator.start();
+                }
+                if (mCodecWrapper == null) {
+                    startPlayback();
+                }
             }
 
 
         });
+        mPlaybackView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
+            @Override
+            public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int i, int i1) {
+                startPlayback();
+            }
+
+            @Override
+            public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture, int i, int i1) {
+                startPlayback();
+            }
+
+            @Override
+            public boolean onSurfaceTextureDestroyed(SurfaceTexture surfaceTexture) {
+                return false;
+            }
+
+            @Override
+            public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {
+
+            }
+        });
+
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_media_player, menu);
-        return true;
-    }
+//    @Override
+//    public boolean onCreateOptionsMenu(Menu menu) {
+//        MenuInflater inflater = getMenuInflater();
+//        inflater.inflate(R.menu.menu_media_player, menu);
+//        return true;
+//    }
 
     @Override
     protected void onPause() {
